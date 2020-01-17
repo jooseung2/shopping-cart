@@ -1,4 +1,8 @@
 import React, { useEffect, useState } from "react";
+import "rbx/index.css";
+import { Container } from "rbx";
+
+import ProductList from "./ProductList";
 
 const App = () => {
   const [data, setData] = useState({});
@@ -13,11 +17,9 @@ const App = () => {
   }, []);
 
   return (
-    <ul>
-      {products.map(product => (
-        <li key={product.sku}>{product.title}</li>
-      ))}
-    </ul>
+    <Container>
+      <ProductList products={products} />
+    </Container>
   );
 };
 
