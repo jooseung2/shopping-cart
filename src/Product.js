@@ -1,13 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, Image, Title, Button } from "rbx";
+
+import SizeButton from "./SizeButton";
 
 const Product = product => {
   // console.log(product);
+  const [size, setSize] = useState("");
+
   return (
     <Card>
       <Card.Image>
         <Image.Container>
-          <Image src={`data/products/${product.product.sku}_2.jpg`}></Image>
+          <Image src={`data/products/${product.product.sku}_1.jpg`}></Image>
         </Image.Container>
       </Card.Image>
       <Card.Content>
@@ -17,10 +21,12 @@ const Product = product => {
           {product.product.currencyFormat}
           {product.product.price}
         </Title>
-        <Button>S</Button>
-        <Button>M</Button>
-        <Button>L</Button>
-        <Button>XL</Button>
+        <SizeButton size="S" chosenSize={size} setSize={setSize}></SizeButton>
+        <SizeButton size="M" chosenSize={size} setSize={setSize}></SizeButton>
+        <SizeButton size="L" chosenSize={size} setSize={setSize}></SizeButton>
+        <SizeButton size="XL" chosenSize={size} setSize={setSize}></SizeButton>
+        <Button>Add to cart</Button>
+        <Button>Unselect size</Button>
       </Card.Content>
     </Card>
   );
