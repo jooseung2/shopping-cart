@@ -3,23 +3,35 @@ import "rbx/index.css";
 import { Container, Button } from "rbx";
 import Sidebar from "react-sidebar";
 
-import ProductList from "./ProductList";
-import Cart from "./Cart";
+import ProductList from "./components/ProductList";
+import Cart from "./components/Cart";
 
 const useCartProducts = () => {
   const [cartProducts, setCartProducts] = useState([]);
   const addCartProduct = (p, size) => {
     setCartProducts(
-      cartProducts.find(product => product.sku === p.sku)
+      // if the product that I am about to add to cart is already in it,
+      cartProducts.find(
+        product => product.sku === p.sku && product.size === size
+      )
         ? cartProducts.map(product =>
-            product.sku === p.sku
+            product.sku === p.sku && product.size === size
               ? { ...product, quantity: product.quantity + 1 }
               : product
           )
-        : [{ ...p, size, quantity: 1 }].concat(cartProducts)
+        : // else, add to cart with quantity of 1
+          [{ ...p, size, quantity: 1 }].concat(cartProducts)
     );
   };
-  return [cartProducts, addCartProduct];
+  const removeCartProduct = p => {
+    setCartProducts(
+      cartProducts.filter(
+        product => product.sku !== p.sku || product.size !== p.size
+      )
+    );
+  };
+  // console.log("haha");
+  return [cartProducts, addCartProduct, removeCartProduct];
 };
 
 const App = () => {
@@ -27,10 +39,7 @@ const App = () => {
   const products = Object.values(data);
 
   const [cartOpen, setCartOpen] = useState(false);
-  const [cartProducts, addCartProduct] = useCartProducts();
-
-  // console.log(cartProducts);
-  // console.log(`App.js ${addCartProduct}`);
+  const [cartProducts, addCartProduct, removeCartProduct] = useCartProducts();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -43,7 +52,15 @@ const App = () => {
 
   return (
     <Sidebar
-      sidebar={<Cart cartProducts={cartProducts} />}
+      sidebar={
+        <Container>
+          <Button onClick={() => setCartOpen(false)}>close</Button>
+          <Cart
+            cartProducts={cartProducts}
+            removeCartProduct={removeCartProduct}
+          />
+        </Container>
+      }
       open={cartOpen}
       onSetOpen={setCartOpen}
       pullright

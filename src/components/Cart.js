@@ -2,7 +2,8 @@ import React from "react";
 import "rbx/index.css";
 import { Box, Card, Button, Title, Media, Image, Content } from "rbx";
 
-const Cart = ({ cartProducts }) => {
+const Cart = ({ cartProducts, removeCartProduct }) => {
+  console.log(cartProducts);
   return (
     <Card>
       <Card.Header>
@@ -18,32 +19,37 @@ const Cart = ({ cartProducts }) => {
         </p>
         <Button>Checkout</Button>
         {cartProducts.map(product => (
-          <CartProduct key={product.sku} product={product} />
+          <CartProduct
+            key={product.sku.toString().concat(product.size.toString())}
+            product={product}
+            removeCartProduct={removeCartProduct}
+          />
         ))}
       </Card.Content>
     </Card>
   );
 };
 
-const CartProduct = product => {
+const CartProduct = ({ product, removeCartProduct }) => {
   return (
     <Box>
       <Media>
         <Media.Item as="figure" align="left">
           <Image.Container as="p" size={64}>
-            <Image src={`data/products/${product.product.sku}_2.jpg`}></Image>;
+            <Image src={`data/products/${product.sku}_2.jpg`}></Image>
           </Image.Container>
         </Media.Item>
         <Media.Item align="content">
           <Content>
+            <Button onClick={() => removeCartProduct(product)}>x</Button>
             <p>
-              <strong>{product.product.title}</strong>
+              <strong>{product.title}</strong>
               <br />
-              Quantity: {product.product.quantity}
+              Quantity: {product.quantity}
               <br />
-              Size: {product.product.size}
+              Size: {product.size}
               <br />
-              Price: {product.product.currencyFormat} {product.product.price}
+              Price: {product.currencyFormat} {product.price}
             </p>
           </Content>
         </Media.Item>
