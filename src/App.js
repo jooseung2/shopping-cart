@@ -3,6 +3,10 @@ import "rbx/index.css";
 import { Container, Button } from "rbx";
 import Sidebar from "react-sidebar";
 
+import firebase from "firebase/app";
+import db from "./components/Database";
+// import 'firebase/auth';
+
 import ProductList from "./components/ProductList";
 import Cart from "./components/Cart";
 
@@ -68,14 +72,28 @@ const App = () => {
   const [productsLoaded, setProductsLoaded] = useState(false);
   const [inventoryLoaded, setInventoryLoaded] = useState(false);
 
+  // useEffect(() => {
+  //   const fetchInventory = async () => {
+  //     const response = await fetch("./data/inventory.json");
+  //     const json = await response.json();
+  //     setInventory(json);
+  //     setInventoryLoaded(true);
+  //   };
+  //   fetchInventory();
+  // }, []);
+
   useEffect(() => {
-    const fetchInventory = async () => {
-      const response = await fetch("./data/inventory.json");
-      const json = await response.json();
-      setInventory(json);
-      setInventoryLoaded(true);
+    const handleData = snap => {
+      if (snap.val()) {
+        setInventory(snap.val());
+        setInventoryLoaded(true);
+      }
     };
-    fetchInventory();
+
+    db.on("value", handleData, error => alert(error));
+    return () => {
+      db.off("value", handleData);
+    };
   }, []);
 
   return productsLoaded && inventoryLoaded ? (
