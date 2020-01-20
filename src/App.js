@@ -7,31 +7,37 @@ import ProductList from "./components/ProductList";
 import Cart from "./components/Cart";
 
 const useCartProducts = () => {
-  const [cartProducts, setCartProducts] = useState([]);
+  const [cartProducts, setCartProducts] = useState({});
   const addCartProduct = (p, size) => {
+    const id = p.sku + size;
+    if (cartProducts[id]) {
+      const oldCartProduct = cartProducts[id];
+      const newCartProduct = {
+        ...oldCartProduct,
+        quantity: oldCartProduct.quantity + 1
+      };
+      setCartProducts({ ...cartProducts, [id]: newCartProduct });
+    } else {
+      const newCartProduct = { product: p, size: size, quantity: 1 };
+      setCartProducts({ ...cartProducts, [id]: newCartProduct });
+    }
+  };
+
+  const removeCartProduct = cartProductId => {
     setCartProducts(
-      // if the product that I am about to add to cart is already in it,
-      cartProducts.find(
-        product => product.sku === p.sku && product.size === size
-      )
-        ? cartProducts.map(product =>
-            product.sku === p.sku && product.size === size
-              ? { ...product, quantity: product.quantity + 1 }
-              : product
-          )
-        : // else, add to cart with quantity of 1
-          [{ ...p, size, quantity: 1 }].concat(cartProducts)
+      Object.keys(cartProducts)
+        .filter(id => id !== cartProductId)
+        .reduce(
+          (accumulator, id) => ({ ...accumulator, [id]: cartProducts[id] }),
+          {}
+        )
     );
   };
-  const removeCartProduct = p => {
-    setCartProducts(
-      cartProducts.filter(
-        product => product.sku !== p.sku || product.size !== p.size
-      )
-    );
+
+  const emptyCart = () => {
+    setCartProducts({});
   };
-  // console.log("haha");
-  return [cartProducts, addCartProduct, removeCartProduct];
+  return [cartProducts, addCartProduct, removeCartProduct, emptyCart];
 };
 
 const App = () => {
@@ -39,25 +45,48 @@ const App = () => {
   const products = Object.values(data);
 
   const [cartOpen, setCartOpen] = useState(false);
-  const [cartProducts, addCartProduct, removeCartProduct] = useCartProducts();
+  const [
+    cartProducts,
+    addCartProduct,
+    removeCartProduct,
+    emptyCart
+  ] = useCartProducts();
+
+  const openCart = x => setCartOpen(x);
 
   useEffect(() => {
     const fetchProducts = async () => {
       const response = await fetch("./data/products.json");
       const json = await response.json();
       setData(json);
+      setProductsLoaded(true);
     };
     fetchProducts();
   }, []);
 
-  return (
+  const [inventory, setInventory] = useState({});
+  const [productsLoaded, setProductsLoaded] = useState(false);
+  const [inventoryLoaded, setInventoryLoaded] = useState(false);
+
+  useEffect(() => {
+    const fetchInventory = async () => {
+      const response = await fetch("./data/inventory.json");
+      const json = await response.json();
+      setInventory(json);
+      setInventoryLoaded(true);
+    };
+    fetchInventory();
+  }, []);
+
+  return productsLoaded && inventoryLoaded ? (
     <Sidebar
       sidebar={
         <Container>
-          <Button onClick={() => setCartOpen(false)}>close</Button>
           <Cart
+            openCart={openCart}
             cartProducts={cartProducts}
             removeCartProduct={removeCartProduct}
+            emptyCart={emptyCart}
           />
         </Container>
       }
@@ -67,9 +96,17 @@ const App = () => {
     >
       <Container>
         <Button onClick={() => setCartOpen(true)}>Open Cart</Button>
-        <ProductList products={products} addCartProduct={addCartProduct} />
+        <ProductList
+          inventory={inventory}
+          products={products}
+          addCartProduct={addCartProduct}
+          openCart={openCart}
+          cartProducts={cartProducts}
+        />
       </Container>
     </Sidebar>
+  ) : (
+    <h1>loading</h1>
   );
 };
 

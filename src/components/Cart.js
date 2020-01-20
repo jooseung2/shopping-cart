@@ -1,55 +1,80 @@
 import React from "react";
 import "rbx/index.css";
-import { Box, Card, Button, Title, Media, Image, Content } from "rbx";
+import {
+  Box,
+  Card,
+  Button,
+  Title,
+  Media,
+  Image,
+  Content,
+  Container
+} from "rbx";
 
-const Cart = ({ cartProducts, removeCartProduct }) => {
-  console.log(cartProducts);
+const Cart = ({ cartProducts, removeCartProduct, emptyCart, openCart }) => {
   return (
     <Card>
       <Card.Header>
-        <Title>Cart</Title>
+        <Container>
+          <Title>Cart</Title>
+          <Button onClick={() => openCart(false)}>Close tab</Button>
+        </Container>
       </Card.Header>
       <Card.Content>
         <p>
-          {cartProducts.length > 0
-            ? `Subtotal: ${
-                cartProducts[0]["currencyFormat"]
-              } ${cartProducts.reduce((total, p) => total + p.price, 0)}`
-            : `Nothing in the cart\n\nNo way you dont want any tshirt from here`}
+          {Object.keys(cartProducts).length > 0
+            ? Object.keys(cartProducts)
+                .reduce(
+                  (total, id) =>
+                    total +
+                    cartProducts[id].product.price * cartProducts[id].quantity,
+                  0
+                )
+                .toFixed(2)
+            : "Nothing in the cart"}
         </p>
+
         <Button>Checkout</Button>
-        {cartProducts.map(product => (
-          <CartProduct
-            key={product.sku.toString().concat(product.size.toString())}
-            product={product}
-            removeCartProduct={removeCartProduct}
-          />
-        ))}
+        <Button onClick={() => emptyCart()}>Clear</Button>
+        {Object.keys(cartProducts).map(id => {
+          const { product, quantity, size } = cartProducts[id];
+          return (
+            <CartProduct
+              key={id}
+              product={product}
+              size={size}
+              quantity={quantity}
+              removeCartProduct={removeCartProduct}
+            />
+          );
+        })}
       </Card.Content>
     </Card>
   );
 };
 
-const CartProduct = ({ product, removeCartProduct }) => {
+const CartProduct = ({ product, size, quantity, removeCartProduct }) => {
+  const { sku, title, price, currencyFormat } = product;
+  const imgsrc = `data/products/${sku}_2.jpg`;
   return (
     <Box>
       <Media>
         <Media.Item as="figure" align="left">
           <Image.Container as="p" size={64}>
-            <Image src={`data/products/${product.sku}_2.jpg`}></Image>
+            <Image src={imgsrc}></Image>
           </Image.Container>
         </Media.Item>
         <Media.Item align="content">
           <Content>
             <Button onClick={() => removeCartProduct(product)}>x</Button>
             <p>
-              <strong>{product.title}</strong>
+              <strong>{title}</strong>
               <br />
-              Quantity: {product.quantity}
+              Quantity: {quantity}
               <br />
-              Size: {product.size}
+              Size: {size}
               <br />
-              Price: {product.currencyFormat} {product.price}
+              Price: {currencyFormat} {price.toFixed(2)}
             </p>
           </Content>
         </Media.Item>
