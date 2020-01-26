@@ -1,69 +1,81 @@
-import React from "react";
+import React, { useEffect } from "react";
 import "rbx/index.css";
 import { Card, Button, Title, Delete } from "rbx";
 
 import CartProduct from "./CartProduct";
+import db from "./Database";
 
 const subtotal = cartProducts => {
-  return Object.keys(cartProducts)
-    .reduce(
-      (total, id) =>
-        total + cartProducts[id].product.price * cartProducts[id].quantity,
-      0
-    )
-    .toFixed(2)
-    .toString();
+  if (Object.keys(cartProducts).length > 0) {
+    return (
+      "Total : $ " +
+      Object.keys(cartProducts)
+        .reduce(
+          (total, id) =>
+            total + cartProducts[id].product.price * cartProducts[id].quantity,
+          0
+        )
+        .toFixed(2)
+        .toString()
+    );
+  } else {
+    return "Nothing in the cart";
+  }
 };
 
-const renderCartProducts = (cartProducts, removeCartProduct, user) =>
+const handleCheckout = (cartProducts, emptyCart, user) => {
+  if (user) {
+    const inventoryRef = db.ref("inventory/");
+    inventoryRef.transaction(inventory => {
+      if (inventory) {
+        Object.values(cartProducts).forEach(cp => {
+          const { product, size, quantity } = cp;
+          inventory[product.sku][size] -= quantity;
+        });
+      }
+      return inventory;
+    });
+    emptyCart(user);
+    alert("Successfully checked out");
+  } else {
+    alert("Please login to checkout");
+  }
+};
+
+const renderCartProducts = (
+  inventory,
+  cartProducts,
+  addCartProduct,
+  removeCartProduct,
+  decrementCartProduct,
+  user
+) =>
   Object.keys(cartProducts).map(id => {
     const { product, quantity, size } = cartProducts[id];
     return (
       <CartProduct
         key={id}
+        productInventory={inventory[product.sku]}
+        cartProducts={cartProducts}
         product={product}
         size={size}
         quantity={quantity}
+        addCartProduct={addCartProduct}
         removeCartProduct={removeCartProduct}
+        decrementCartProduct={decrementCartProduct}
         user={user}
       />
     );
   });
 
-// const Cart = ({
-//   openCart,
-//   cartProducts,
-//   removeCartProduct,
-//   emptyCart,
-//   user
-// }) => {
-//   return (
-//     <Card>
-//       <Card.Header>
-//         <Container>
-//           <Title>Cart</Title>
-//           <Button onClick={() => openCart(false)}>Close tab</Button>
-//         </Container>
-//       </Card.Header>
-//       <Card.Content>
-//         {renderCartProducts(cartProducts, removeCartProduct, user)}
-//         <p>
-//           {Object.keys(cartProducts).length > 0
-//             ? "Total : $ " + subtotal(cartProducts)
-//             : "Nothing in the cart"}
-//         </p>
-//         <Button>Checkout</Button>
-//         <Button onClick={() => emptyCart()}>Clear</Button>
-//       </Card.Content>
-//     </Card>
-//   );
-// };
-
 const Cart = ({
   openCart,
+  inventory,
   cartProducts,
+  addCartProduct,
   removeCartProduct,
   emptyCart,
+  decrementCartProduct,
   user
 }) => {
   return (
@@ -73,14 +85,19 @@ const Cart = ({
         <Delete onClick={() => openCart(false)}></Delete>
       </Card.Header.Title>
       <Card.Content>
-        <p>
-          {Object.keys(cartProducts).length > 0
-            ? "Total : $ " + subtotal(cartProducts)
-            : "Nothing in the cart"}
-        </p>
-        <Button>Checkout</Button>
+        <p>{subtotal(cartProducts)}</p>
+        <Button onClick={() => handleCheckout(cartProducts, emptyCart, user)}>
+          Checkout
+        </Button>
         <Button onClick={() => emptyCart(user)}>Clear</Button>
-        {renderCartProducts(cartProducts, removeCartProduct, user)}
+        {renderCartProducts(
+          inventory,
+          cartProducts,
+          addCartProduct,
+          removeCartProduct,
+          decrementCartProduct,
+          user
+        )}
       </Card.Content>
     </Card>
   );

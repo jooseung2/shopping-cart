@@ -2,20 +2,7 @@ import React, { useState } from "react";
 import "rbx/index.css";
 import { Card, Image, Title, Button, Container } from "rbx";
 
-const numQuantityInCart = (product, size, cartProducts) => {
-  const id = product.sku + size;
-  return cartProducts[id] ? cartProducts[id].quantity : 0;
-};
-
-const getAvailableStock = (cartProducts, productInventory, product) =>
-  Object.keys(productInventory).reduce(
-    (stock, size) => ({
-      ...stock,
-      [size]:
-        productInventory[size] - numQuantityInCart(product, size, cartProducts)
-    }),
-    {}
-  );
+import { getAvailableStock } from "./utils";
 
 const Product = ({
   productInventory,
@@ -53,6 +40,13 @@ const Product = ({
     return null;
   };
 
+  const renderUnselectButton = () => {
+    const stock = getAvailableStock(cartProducts, productInventory, product);
+    if (Object.keys(stock).some(val => stock[val] > 0)) {
+      return <Button onClick={() => setChosenSize("")}>Unselect</Button>;
+    }
+  };
+
   const renderAddToCart = () => {
     const stock = getAvailableStock(cartProducts, productInventory, product);
     if (
@@ -71,7 +65,6 @@ const Product = ({
         >
           Add to cart
         </Button>
-        <Button onClick={() => setChosenSize("")}>Unselect size</Button>
       </Container>
     );
   };
@@ -92,14 +85,15 @@ const Product = ({
       <Card.Content size="small">
         <Title>{product.title}</Title>
         <Title>{product.description}</Title>
-        <Title>
-          {product.currencyFormat}
-          {product.price.toFixed(2)}
-        </Title>
-        {renderSizeButton("S")}
-        {renderSizeButton("M")}
-        {renderSizeButton("L")}
-        {renderSizeButton("XL")}
+        {product.currencyFormat}
+        {product.price.toFixed(2)}
+        <Button.Group hasAddons>
+          {renderSizeButton("S")}
+          {renderSizeButton("M")}
+          {renderSizeButton("L")}
+          {renderSizeButton("XL")}
+          {renderUnselectButton()}
+        </Button.Group>
         {renderOutOfStock()}
         {renderAddToCart()}
       </Card.Content>

@@ -1,8 +1,25 @@
 import React from "react";
 import "rbx/index.css";
-import { Box, Media, Content, Image, Delete } from "rbx";
+import { Box, Media, Content, Image, Delete, Button } from "rbx";
 
-const CartProduct = ({ product, size, quantity, removeCartProduct, user }) => {
+import { getAvailableStock } from "./utils";
+
+const canAddMore = (cartProducts, productInventory, product, size) => {
+  const stock = getAvailableStock(cartProducts, productInventory, product);
+  return stock[size] > 0 ? true : false;
+};
+
+const CartProduct = ({
+  productInventory,
+  cartProducts,
+  product,
+  size,
+  quantity,
+  addCartProduct,
+  removeCartProduct,
+  decrementCartProduct,
+  user
+}) => {
   const { sku, title, price, currencyFormat } = product;
   const imgsrc = `data/products/${sku}_2.jpg`;
 
@@ -17,6 +34,19 @@ const CartProduct = ({ product, size, quantity, removeCartProduct, user }) => {
         <Media.Item align="content">
           <Content>
             <Delete onClick={() => removeCartProduct(sku + size, user)} />
+            <Button.Group hasAddons>
+              <Button
+                disabled={
+                  !canAddMore(cartProducts, productInventory, product, size)
+                }
+                onClick={() => addCartProduct(product, size, user)}
+              >
+                +
+              </Button>
+              <Button onClick={() => decrementCartProduct(sku + size, user)}>
+                -
+              </Button>
+            </Button.Group>
             <p>
               <strong>{title}</strong>
               <br />

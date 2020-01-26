@@ -20,7 +20,6 @@ const useCartProducts = () => {
       newCartProducts = { ...cartProducts, [id]: newCartProduct };
       setCartProducts({ ...cartProducts, [id]: newCartProduct });
     }
-    console.log(user ? "true" : "false");
     if (user) {
       db.ref("users/" + user.uid).set(newCartProducts);
     }
@@ -36,8 +35,29 @@ const useCartProducts = () => {
     setCartProducts(newCartProducts);
 
     if (user) {
-      console.log(user ? "true" : "false");
       db.ref("users/" + user.uid).set(newCartProducts);
+    }
+  };
+
+  const decrementCartProduct = (cartProductId, user) => {
+    let newCartProducts = null;
+
+    const oldCartProduct = cartProducts[cartProductId];
+    const oldQuantity = oldCartProduct.quantity;
+
+    if (oldQuantity > 1) {
+      const newCartProduct = {
+        ...oldCartProduct,
+        quantity: oldCartProduct.quantity - 1
+      };
+      newCartProducts = { ...cartProducts, [cartProductId]: newCartProduct };
+      setCartProducts(newCartProducts);
+
+      if (user) {
+        db.ref("users/" + user.uid).set(newCartProducts);
+      }
+    } else {
+      removeCartProduct(cartProductId, user);
     }
   };
 
@@ -53,6 +73,7 @@ const useCartProducts = () => {
     setCartProducts,
     addCartProduct,
     removeCartProduct,
+    decrementCartProduct,
     emptyCart
   ];
 };
