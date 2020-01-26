@@ -10,67 +10,33 @@ import db from "./components/Database";
 import ProductList from "./components/ProductList";
 import Cart from "./components/Cart";
 import Authenticate from "./components/Authenticate";
-
-const useCartProducts = () => {
-  const [cartProducts, setCartProducts] = useState({});
-  const addCartProduct = (p, size) => {
-    const id = p.sku + size;
-    if (cartProducts[id]) {
-      const oldCartProduct = cartProducts[id];
-      const newCartProduct = {
-        ...oldCartProduct,
-        quantity: oldCartProduct.quantity + 1
-      };
-      setCartProducts({ ...cartProducts, [id]: newCartProduct });
-    } else {
-      const newCartProduct = { product: p, size: size, quantity: 1 };
-      setCartProducts({ ...cartProducts, [id]: newCartProduct });
-    }
-  };
-
-  const removeCartProduct = cartProductId => {
-    setCartProducts(
-      Object.keys(cartProducts)
-        .filter(id => id !== cartProductId)
-        .reduce(
-          (accumulator, id) => ({ ...accumulator, [id]: cartProducts[id] }),
-          {}
-        )
-    );
-  };
-
-  const emptyCart = () => {
-    setCartProducts({});
-  };
-  return [cartProducts, addCartProduct, removeCartProduct, emptyCart];
-};
+import useCartProducts from "./components/useCartProducts";
 
 const App = () => {
+  /*
+  products
+  */
   const [data, setData] = useState({});
   const products = Object.values(data);
-
-  const [cartOpen, setCartOpen] = useState(false);
-  const [
-    cartProducts,
-    addCartProduct,
-    removeCartProduct,
-    emptyCart
-  ] = useCartProducts();
-
-  const openCart = x => setCartOpen(x);
-
+  const [productsLoaded, setProductsLoaded] = useState(false);
   useEffect(() => {
-    const fetchProducts = async () => {
-      const response = await fetch("./data/products.json");
-      const json = await response.json();
-      setData(json);
-      setProductsLoaded(true);
+    const handleData = snap => {
+      if (snap.val()) {
+        setData(snap.val());
+        setProductsLoaded(true);
+      }
     };
-    fetchProducts();
+    const productsTbl = db.ref("products/");
+    productsTbl.on("value", handleData, error => alert(error));
+    return () => {
+      productsTbl.off("value", handleData);
+    };
   }, []);
 
+  /*
+  inventory
+  */
   const [inventory, setInventory] = useState({});
-  const [productsLoaded, setProductsLoaded] = useState(false);
   const [inventoryLoaded, setInventoryLoaded] = useState(false);
 
   useEffect(() => {
@@ -80,17 +46,48 @@ const App = () => {
         setInventoryLoaded(true);
       }
     };
-
-    db.on("value", handleData, error => alert(error));
+    const inventoryTbl = db.ref("inventory/");
+    inventoryTbl.on("value", handleData, error => alert(error));
     return () => {
-      db.off("value", handleData);
+      inventoryTbl.off("value", handleData);
     };
   }, []);
 
+  /*
+  cart
+  */
+
+  const [cartOpen, setCartOpen] = useState(false);
+  const [
+    cartProducts,
+    setCartProducts,
+    addCartProduct,
+    removeCartProduct,
+    emptyCart
+  ] = useCartProducts();
+
+  const openCart = x => setCartOpen(x);
+
+  /*
+  user
+  */
   const [user, setUser] = useState(null);
   useEffect(() => {
     firebase.auth().onAuthStateChanged(setUser);
   }, []);
+
+  useEffect(() => {
+    const getUserCart = user => {
+      const handleData = snap => {
+        if (snap.val()) {
+          setCartProducts(snap.val());
+        }
+      };
+      const userCartTbl = db.ref("users/" + user.uid);
+      userCartTbl.once("value").then(handleData, error => alert(error));
+    };
+    user ? getUserCart(user) : setCartProducts({});
+  }, [user, setCartProducts]);
 
   return productsLoaded && inventoryLoaded ? (
     <Sidebar
@@ -101,6 +98,7 @@ const App = () => {
             cartProducts={cartProducts}
             removeCartProduct={removeCartProduct}
             emptyCart={emptyCart}
+            user={user}
           />
         </Container>
       }
@@ -117,6 +115,7 @@ const App = () => {
           addCartProduct={addCartProduct}
           openCart={openCart}
           cartProducts={cartProducts}
+          user={user}
         />
       </Container>
     </Sidebar>

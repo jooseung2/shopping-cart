@@ -22,7 +22,8 @@ const Product = ({
   product,
   addCartProduct,
   openCart,
-  cartProducts
+  cartProducts,
+  user
 }) => {
   const [chosenSize, setChosenSize] = useState("");
 
@@ -64,7 +65,7 @@ const Product = ({
         <Button
           onClick={() =>
             chosenSize
-              ? addToCart(product, chosenSize)
+              ? addToCart(product, chosenSize, user)
               : alert("Choose a size.")
           }
         >
@@ -75,9 +76,9 @@ const Product = ({
     );
   };
 
-  const addToCart = (product, chosenSize) => {
+  const addToCart = (product, chosenSize, user) => {
     setChosenSize("");
-    addCartProduct(product, chosenSize);
+    addCartProduct(product, chosenSize, user);
     openCart(true);
   };
 

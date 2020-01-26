@@ -17,7 +17,7 @@ const uiConfig = {
 const Authenticate = user => {
   return (
     <React.Fragment>
-      {user === null ? <Welcome user={user} /> : <SignIn />}
+      {user.user !== null ? <Welcome user={user.user} /> : <SignIn />}
     </React.Fragment>
   );
 };
@@ -26,7 +26,7 @@ const Welcome = ({ user }) => (
   <Message color="info">
     <Message.Header>
       Welcome, {user.displayName}
-      <Button primary onClick={() => firebase.auth().signOut()}>
+      <Button color="primary" onClick={() => firebase.auth().signOut()}>
         Log out
       </Button>
     </Message.Header>

@@ -9,7 +9,8 @@ const ProductList = ({
   products,
   addCartProduct,
   openCart,
-  cartProducts
+  cartProducts,
+  user
 }) => {
   return (
     <Column.Group hcentered="true" multiline>
@@ -21,6 +22,7 @@ const ProductList = ({
             addCartProduct={addCartProduct}
             openCart={openCart}
             cartProducts={cartProducts}
+            user={user}
           />
         </Column>
       ))}
