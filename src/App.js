@@ -64,7 +64,8 @@ const App = () => {
     addCartProduct,
     removeCartProduct,
     decrementCartProduct,
-    emptyCart
+    emptyCart,
+    updateShoppingCart
   ] = useCartProducts();
 
   const openCart = x => setCartOpen(x);
@@ -102,6 +103,7 @@ const App = () => {
             removeCartProduct={removeCartProduct}
             decrementCartProduct={decrementCartProduct}
             emptyCart={emptyCart}
+            updateShoppingCart={updateShoppingCart}
             user={user}
           />
         </Container>

@@ -42,6 +42,48 @@ const handleCheckout = (cartProducts, emptyCart, user) => {
   }
 };
 
+const exceedInventoryHandler = (
+  cartProducts,
+  inventory,
+  updateShoppingCart,
+  user
+) => {
+  let userMessage = "";
+  let exceeds = false;
+
+  const newCartProducts = Object.keys(cartProducts).reduce((newCart, id) => {
+    const { product, size, quantity } = cartProducts[id];
+    const available = inventory[product.sku][size];
+    if (available < quantity) {
+      exceeds = true;
+      if (inventory[product.sku][size] === 0) {
+        userMessage =
+          userMessage +
+          `${product.title} of size ${size} is out of stock. Removed from shopping cart\n`;
+        return newCart;
+      } else {
+        userMessage =
+          userMessage +
+          `Due to inventory change, reduced quantity of ${product.title} of size ${size} from ${quantity} to ${available}\n`;
+        return {
+          ...newCart,
+          [id]: {
+            ...cartProducts[id],
+            quantity: available
+          }
+        };
+      }
+    } else {
+      return { ...newCart, [id]: cartProducts[id] };
+    }
+  }, {});
+
+  if (exceeds) {
+    alert(userMessage);
+    updateShoppingCart(newCartProducts, user);
+  }
+};
+
 const renderCartProducts = (
   inventory,
   cartProducts,
@@ -76,8 +118,12 @@ const Cart = ({
   removeCartProduct,
   emptyCart,
   decrementCartProduct,
+  updateShoppingCart,
   user
 }) => {
+  useEffect(() => {
+    exceedInventoryHandler(cartProducts, inventory, updateShoppingCart, user);
+  }, [inventory, cartProducts, updateShoppingCart, user]);
   return (
     <Card>
       <Card.Header.Title align="centered">

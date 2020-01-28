@@ -68,13 +68,23 @@ const useCartProducts = () => {
       db.ref("users/" + user.uid).set(newCartProducts);
     }
   };
+
+  const updateShoppingCart = (newCartProducts, user) => {
+    setCartProducts(newCartProducts);
+
+    if (user) {
+      db.ref("carts/" + user.uid).set(newCartProducts);
+    }
+  };
+
   return [
     cartProducts,
     setCartProducts,
     addCartProduct,
     removeCartProduct,
     decrementCartProduct,
-    emptyCart
+    emptyCart,
+    updateShoppingCart
   ];
 };
 
